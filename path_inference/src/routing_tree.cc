@@ -341,16 +341,11 @@ path_work(const std::vector<ASNumber> &jobs, const AdjList &adj_list,
       paths.clear();
 
       mtx->lock();
-      //for (auto &pair : tmp) out->insert(pair);
       for (auto &pair : tmp) {
          std::size_t num_paths = 0;
          auto path_strs = prepare_path_strs(pair.second, &num_paths);
          for (auto str : path_strs) {
-         //for (std::size_t idx = 0; idx < num_paths; ++idx) {
-            //auto *str = path_strs[idx];
-            //if (std::strchr(str, ' ') != nullptr) {
-               std::cout << str << std::endl;
-            //}
+             std::cout << str << std::endl;
          }
       }
       mtx->unlock();

@@ -94,8 +94,6 @@ int main(int argc, char **argv) {
    AdjList adj_list;
    add_relationships_to_adj_list(asrel_filename, &adj_list);
 
-   std::cout << "built adj list" << std::endl;
-
    std::vector<ASNumber> asns;
 
    for (auto &asn_adjlist_pair : adj_list) {
@@ -106,9 +104,7 @@ int main(int argc, char **argv) {
 
    IndexedPathsTo indexed_paths_to;
 
-   std::cout << "computing vanilla paths" << std::endl;
    compute_all_vanilla_paths(asns, adj_list, &indexed_paths_to, num_threads);
-   std::cout << "done" << std::endl;
 
    tbb::mutex mtx;
 
@@ -127,11 +123,9 @@ int main(int argc, char **argv) {
       mtx.unlock();
    };
 
-   std::cout << "starting parallel for each" << std::endl;
    tbb::parallel_for_each(indexed_paths_to.cbegin(), indexed_paths_to.cend(),
                           mt_print_path);
 
-   std::cout << "done" << std::endl;
    std::fflush(stdout); std::fflush(stderr);
    std::_Exit(0);
 }
