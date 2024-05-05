@@ -14,6 +14,52 @@
 
 namespace bgpsim {
 
+//void path_to_str(const Path& path,
+//                 std::size_t max_len [[ gnu::unused ]],
+//                 std::vector<char[256]> *out)
+//{
+//   std::size_t len = 0;
+//
+//   auto add_hop_str = [&] (const char *hop_str, const char *format,
+//                           std::size_t num_extra) -> void
+//   {
+//      len += std::strlen(hop_str) + num_extra;
+//      assert(len < max_len);
+//      std::string tmpstr;
+//      tmpstr << std::format, hop_str);
+//      out->push_back(tmpstr);
+//   };
+//
+//   auto end_itr = path.crend() - 1;
+//
+//   for (auto itr = path.crbegin(); itr < end_itr; ++itr) {
+//      add_hop_str(itr->c_str(), "%s ", 1);
+//   }
+//
+//   add_hop_str(end_itr->c_str(), "%s", 0);
+//}
+
+
+std::vector<std::string>
+prepare_path_strs(const IndexedPaths &indexed_paths, std::size_t *num_paths)
+{
+   *num_paths = indexed_paths.size();
+
+   std::vector<std::string> path_strs;
+
+   std::size_t idx = 0;
+   for (auto &value : indexed_paths) {
+      std::string tmpstr = "";
+      for (auto i : value.second) {
+          tmpstr = tmpstr + i + " ";
+      }
+      tmpstr.pop_back();
+      path_strs.push_back(tmpstr);
+   }
+
+   return path_strs;
+}
+
 // Helper for add_relationships...
 using RelationshipInfo = std::tuple<ASNumber, ASNumber, Relationship>;
 
@@ -293,11 +339,23 @@ path_work(const std::vector<ASNumber> &jobs, const AdjList &adj_list,
       compute_paths(adj_list, "NIL", origins, sim_policy, &paths);
       tmp.push_back({asn, paths});
       paths.clear();
-   }
 
-   mtx->lock();
-   for (auto &pair : tmp) out->insert(pair);
-   mtx->unlock();
+      mtx->lock();
+      //for (auto &pair : tmp) out->insert(pair);
+      for (auto &pair : tmp) {
+         std::size_t num_paths = 0;
+         auto path_strs = prepare_path_strs(pair.second, &num_paths);
+         for (auto str : path_strs) {
+         //for (std::size_t idx = 0; idx < num_paths; ++idx) {
+            //auto *str = path_strs[idx];
+            //if (std::strchr(str, ' ') != nullptr) {
+               std::cout << str << std::endl;
+            //}
+         }
+      }
+      mtx->unlock();
+      tmp.clear();
+   }
 }
 
 void compute_all_vanilla_paths(const std::vector<ASNumber> &asns,

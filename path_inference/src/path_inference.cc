@@ -64,22 +64,16 @@ void path_to_str(const Path& path,
    add_hop_str(end_itr->c_str(), "%s", 0);
 }
 
-using PathStrBuffer = char [BUF_SZ];
-
-std::shared_ptr<PathStrBuffer>
+std::vector<char[BUF_SZ]>
 prepare_path_strs(const IndexedPaths &indexed_paths, std::size_t *num_paths)
 {
    *num_paths = indexed_paths.size();
 
-   std::shared_ptr<PathStrBuffer> path_strs
-      (
-         new PathStrBuffer[*num_paths],
-         std::default_delete<PathStrBuffer[]>()
-      );
+   std::vector<char[BUF_SZ]> path_strs;
 
    std::size_t idx = 0;
    for (auto &value : indexed_paths) {
-      path_to_str(value.second, BUF_SZ, path_strs.get()[idx]);
+      path_to_str(value.second, BUF_SZ, path_strs[idx]);
       ++idx;
    }
 
@@ -100,6 +94,8 @@ int main(int argc, char **argv) {
    AdjList adj_list;
    add_relationships_to_adj_list(asrel_filename, &adj_list);
 
+   std::cout << "built adj list" << std::endl;
+
    std::vector<ASNumber> asns;
 
    for (auto &asn_adjlist_pair : adj_list) {
@@ -110,7 +106,9 @@ int main(int argc, char **argv) {
 
    IndexedPathsTo indexed_paths_to;
 
+   std::cout << "computing vanilla paths" << std::endl;
    compute_all_vanilla_paths(asns, adj_list, &indexed_paths_to, num_threads);
+   std::cout << "done" << std::endl;
 
    tbb::mutex mtx;
 
@@ -121,7 +119,7 @@ int main(int argc, char **argv) {
 
       mtx.lock();
       for (std::size_t idx = 0; idx < num_paths; ++idx) {
-         auto *str = path_strs.get()[idx];
+         auto *str = path_strs[idx];
          if (std::strchr(str, ' ') != nullptr) {
             std::printf("%s\n", str);
          }
@@ -129,9 +127,11 @@ int main(int argc, char **argv) {
       mtx.unlock();
    };
 
+   std::cout << "starting parallel for each" << std::endl;
    tbb::parallel_for_each(indexed_paths_to.cbegin(), indexed_paths_to.cend(),
                           mt_print_path);
 
+   std::cout << "done" << std::endl;
    std::fflush(stdout); std::fflush(stderr);
    std::_Exit(0);
 }
